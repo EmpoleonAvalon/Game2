@@ -6,7 +6,6 @@
 	</head>
 	<body>
 		<script>
-
 			var config = {
 				type 	: Phaser.AUTO,
 				width	: 800,
@@ -35,10 +34,16 @@
 			function preload (){
 				this.load.image("sky","assets/sky.png");
 				this.load.image("ground","assets/platform.png");
-				this.load.image("star","assets/star.png")
+				this.load.image("stars","assets/star.png")
 				this.load.image("bomb","assets/bomb.png")
 				this.load.spritesheet("dude","assets/dude.png", {
 					frameWidth: 32, frameHeight: 48
+				});
+				//STARS
+				stars = this.physics.add.group({
+					key : 'stars',
+					repeat : 11,
+					setXY : { x: 12, y: 0, stepX: 70}
 				});
 			}
 
@@ -47,14 +52,14 @@
 				this.add.image( 400, 300, "sky");
 				//PLATFORMS
 				platforms = this.physics.add.staticGroup();
-					//MAIN FLOOR
+				//MAIN FLOOR
 					platforms.create( 400, 568, 'ground').setScale(2).refreshBody();
 					platforms.create( 600, 400, 'ground');
 					platforms.create( 50, 250, 'ground');
 					platforms.create( 750, 229, 'ground');
 				//PLAYER
 					player = this.physics.add.sprite(100, 500, 'dude');
-					player.setBounce(0.2);
+					player.setBounce(0.5);
 					player.setCollideWorldBounds(true);
 					player.body.setGravity( 0, 300);
 				//PLAYER ANIMATION
@@ -75,19 +80,34 @@
 						frames : this.anims.generateFrameNumbers("dude", {start: 5, end: 8 }),
 						frameRate : 10,
 						repeat : -1
-					})
-				//COLLIDERS
-				this.physics.add.collider( player, platforms );
+						})
+				
 				//PLAYER EVENTS
 				cursors = this.input.keyboard.createCursorKeys();
-			};
+				//UI
+					scoreText = this.add.text(16, 16, 'score : 0', { fontSize: '32px', fill : '#000'})
+				//STARS
+				stars = this.physics.add.group({
+					key : 'stars',
+					repeat : 11,
+					setXY : { x: 12, y: 0, stepX: 70}
+				});
+
+				stars.children.iterate( function( child ){
+					child.setBounce(Phaser.Math.FloatBetween( 0.5, 0.5));
+				});
+				//COLLIDERS
+				this.physics.add.collider( player, platforms );
+				this.physics.add.collider( stars, platforms );
+				this.physics.add.overlap( player, stars, collectStar, null, this );
+				};
 			function update(){
 				//RUNNING OR WALKING
 				if( cursors.left.isDown ){
-					player.setVelocityX(-160);
+					player.setVelocityX(-200);
 					player.anims.play('left', true);
 				}else if ( cursors.right.isDown){
-					player.setVelocityX(160);
+					player.setVelocityX(200);
 					player.anims.play('right', true);
 				}
 				else {
@@ -97,8 +117,15 @@
 				//JUMP
 				if( cursors.up.isDown && player.body.touching.down ){
 					player.setVelocityY(-500);
-				}	
-				};
+				}
+			
+				}
+
+			function collectStar( player, stars ){
+				stars.disableBody(true, true);
+				score += 10
+				scoreText.setText("Score: " + score );
+			}	
 		</script>
 	</body>
 </html>
